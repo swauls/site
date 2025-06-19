@@ -1,54 +1,95 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>Sürükle Bırak Sıralama</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      padding: 40px;
-    }
-    h2 {
-      text-align: center;
-      color: #333;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-      width: 300px;
-      margin: 0 auto;
-    }
-    li {
-      padding: 12px 20px;
-      margin: 10px 0;
-      background: #ffa726;
-      color: white;
-      font-size: 18px;
-      border-radius: 6px;
-      cursor: grab;
-      transition: background 0.2s ease;
-    }
-    li.dragging {
-      opacity: 0.5;
-      background: #ff9800;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Modern Sürükle-Bırak Sıralama + Kaydetme</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f2f5;
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+  }
+  #container {
+    width: 320px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    padding: 20px;
+  }
+  h2 {
+    text-align: center;
+    color: #222;
+    margin-bottom: 20px;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  li {
+    background: #007bff;
+    color: white;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: grab;
+    box-shadow: 0 3px 6px rgba(0,123,255,0.4);
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+  li.dragging {
+    opacity: 0.6;
+    background-color: #0056b3;
+  }
+  button {
+    display: block;
+    margin: 10px auto 0;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(40,167,69,0.4);
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #1e7e34;
+  }
+</style>
 </head>
 <body>
-
-<h2>Sürükle-Bırak ile Sıralama</h2>
-
-<ul id="sortable-list">
-  <li draggable="true">1. Öğrenci</li>
-  <li draggable="true">2. Öğrenci</li>
-  <li draggable="true">3. Öğrenci</li>
-  <li draggable="true">4. Öğrenci</li>
-</ul>
+  <div id="container">
+    <h2>Sürükle Bırak Sıralama</h2>
+    <ul id="sortable-list">
+      <li draggable="true" data-id="1">Öğrenci 1</li>
+      <li draggable="true" data-id="2">Öğrenci 2</li>
+      <li draggable="true" data-id="3">Öğrenci 3</li>
+      <li draggable="true" data-id="4">Öğrenci 4</li>
+    </ul>
+    <button id="resetBtn">Sıralamayı Sıfırla</button>
+  </div>
 
 <script>
   const list = document.getElementById("sortable-list");
+  const resetBtn = document.getElementById("resetBtn");
   let draggedItem = null;
+
+  // Yükleme anında localStorage’dan sırayı geri yükle
+  window.addEventListener("DOMContentLoaded", () => {
+    const savedOrder = localStorage.getItem("order");
+    if (savedOrder) {
+      const order = JSON.parse(savedOrder);
+      order.forEach(id => {
+        const el = list.querySelector(`li[data-id="${id}"]`);
+        if(el) list.appendChild(el);
+      });
+    }
+  });
 
   list.addEventListener("dragstart", e => {
     draggedItem = e.target;
@@ -58,6 +99,7 @@
   list.addEventListener("dragend", e => {
     e.target.classList.remove("dragging");
     draggedItem = null;
+    saveOrder();
   });
 
   list.addEventListener("dragover", e => {
@@ -72,7 +114,6 @@
 
   function getDragAfterElement(container, y) {
     const draggableElements = [...container.querySelectorAll("li:not(.dragging)")];
-
     return draggableElements.reduce((closest, child) => {
       const box = child.getBoundingClientRect();
       const offset = y - box.top - box.height / 2;
@@ -83,7 +124,18 @@
       }
     }, { offset: Number.NEGATIVE_INFINITY }).element;
   }
-</script>
 
+  // Sıralamayı localStorage’a kaydet
+  function saveOrder() {
+    const order = [...list.children].map(li => li.getAttribute("data-id"));
+    localStorage.setItem("order", JSON.stringify(order));
+  }
+
+  // Sıfırlama butonu ile default sıralamaya dön
+  resetBtn.addEventListener("click", () => {
+    localStorage.removeItem("order");
+    location.reload();
+  });
+</script>
 </body>
 </html>
